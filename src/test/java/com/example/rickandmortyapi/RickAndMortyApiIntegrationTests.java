@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,27 +34,6 @@ public class RickAndMortyApiIntegrationTests {
     static void teardown() throws IOException {
         mockWebServer.shutdown();
     }
-
-/*
-    @BeforeEach
-    void setup() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
-    }
-
-    @AfterEach
-    void teardown() throws IOException {
-        mockWebServer.shutdown();
-    }
-*/
-
-/*
-    @AfterEach
-    void cleanupServer() throws InterruptedException {
-        while (mockWebServer.getRequestCount() > 0)
-            mockWebServer.takeRequest();
-    }
-*/
 
     @DynamicPropertySource
     static void setUrlDynamically(DynamicPropertyRegistry reg) {
@@ -122,6 +102,10 @@ public class RickAndMortyApiIntegrationTests {
                             }
                         ]
                         """));
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("GET", recordedRequest.getMethod());
+        assertEquals("/", recordedRequest.getPath());
     }
 
     @Test
@@ -169,7 +153,7 @@ public class RickAndMortyApiIntegrationTests {
         // When
         mockMvc
                 .perform(MockMvcRequestBuilders
-                        .get("/api/characters?status=wwwwwwwwww")
+                        .get("/api/characters?status=Dead")
                 )
 
                 // Then
@@ -184,11 +168,9 @@ public class RickAndMortyApiIntegrationTests {
                         ]
                         """));
 
-/*
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        Assertions.assertEquals("GET", recordedRequest.getMethod());
-        Assertions.assertEquals("/", recordedRequest.getPath());
-*/
+        assertEquals("GET", recordedRequest.getMethod());
+        assertEquals("/?status=Dead", recordedRequest.getPath());
     }
 
     @Test
@@ -226,7 +208,7 @@ public class RickAndMortyApiIntegrationTests {
         // When
         mockMvc
                 .perform(MockMvcRequestBuilders
-                        .get("/api/characters/abcdef")
+                        .get("/api/characters/204")
                 )
 
                 // Then
@@ -239,11 +221,9 @@ public class RickAndMortyApiIntegrationTests {
                         }
                         """));
 
-/*
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        Assertions.assertEquals("GET", recordedRequest.getMethod());
-        Assertions.assertEquals("/abcdef", recordedRequest.getPath());
-*/
+        assertEquals("GET", recordedRequest.getMethod());
+        assertEquals("/204", recordedRequest.getPath());
     }
 
     @Test
@@ -261,14 +241,11 @@ public class RickAndMortyApiIntegrationTests {
                 )
 
                 // Then
-                .andExpect(status().is(404))
-        ;
+                .andExpect(status().is(404));
 
-/*
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
-        Assertions.assertEquals("GET", recordedRequest.getMethod());
-        Assertions.assertEquals("/abcdef", recordedRequest.getPath());
-*/
+        assertEquals("GET", recordedRequest.getMethod());
+        assertEquals("/abcdef", recordedRequest.getPath());
     }
 
     @Test
@@ -316,12 +293,16 @@ public class RickAndMortyApiIntegrationTests {
         // When
         mockMvc
                 .perform(MockMvcRequestBuilders
-                        .get("/api/characters/species-statistic?status=WWWWWW&species=XXXXXXX")
+                        .get("/api/characters/species-statistic?status=Dead&species=Alien")
                 )
 
                 // Then
                 .andExpect(status().isOk())
                 .andExpect(content().string("1"));
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertEquals("GET", recordedRequest.getMethod());
+        assertEquals("/?status=Dead&species=Alien", recordedRequest.getPath());
     }
 
 }
