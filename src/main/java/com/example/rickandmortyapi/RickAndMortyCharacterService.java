@@ -64,8 +64,8 @@ public class RickAndMortyCharacterService {
         return getCharacterListResponse("?status=" + status);
     }
 
-    public int getStatisticForSpecies(String request, String species) {
-        String newUri = "?status=" + request + "&species=" + species;
+    public int getStatisticForSpecies(String status, String species) {
+        String newUri = "?status=" + status + "&species=" + species;
         RickAndMortyCharacterListResponse response = getResponse(newUri, RickAndMortyCharacterListResponse.class);
         if (response==null) return 0;
         if (response.info()==null) return 0;
