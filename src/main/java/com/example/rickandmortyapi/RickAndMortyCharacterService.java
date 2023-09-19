@@ -14,48 +14,56 @@ public class RickAndMortyCharacterService {
 
     private final WebClient webClient = WebClient.create("https://rickandmortyapi.com/api/character");
 
-    public List<RickAndMortyCharacter> getCharacters() {
-
-        ResponseEntity<RickAndMortyCharacterListResponse> responseEntity = webClient
+    private <ResponseType> ResponseType getResponse(String uri, Class<ResponseType> clazz) {
+        ResponseEntity<ResponseType> responseEntity = webClient
                 .get()
+                .uri(uri)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> Mono.empty())
                 .onStatus(HttpStatusCode::is5xxServerError, clientResponse -> Mono.empty())
-                .toEntity(RickAndMortyCharacterListResponse.class)
+                .toEntity(clazz)
                 .block();
 
-        if (responseEntity==null) return List.of();
+        if (responseEntity==null) return null;
 
         HttpStatusCode statusCode = responseEntity.getStatusCode();
-        if (statusCode.is4xxClientError()) return List.of();
-        if (statusCode.is5xxServerError()) return List.of();
+        if (statusCode.is4xxClientError()) return null;
+        if (statusCode.is5xxServerError()) return null;
 
-        RickAndMortyCharacterListResponse response = responseEntity.getBody();
+        return responseEntity.getBody();
+    }
+
+    private List<RickAndMortyCharacter> getCharacterListResponse(String uri) {
+        RickAndMortyCharacterListResponse response = getResponse(uri, RickAndMortyCharacterListResponse.class);
         if (response==null) return List.of();
 
         return response.results();
     }
 
-    public Optional<RickAndMortyCharacter> getCharacter(String id) {
-
-        ResponseEntity<RickAndMortyCharacterResponse> responseEntity = webClient
-                .get()
-                .uri("/"+id)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, clientResponse -> Mono.empty())
-                .onStatus(HttpStatusCode::is5xxServerError, clientResponse -> Mono.empty())
-                .toEntity(RickAndMortyCharacterResponse.class)
-                .block();
-
-        if (responseEntity==null) return Optional.empty();
-
-        HttpStatusCode statusCode = responseEntity.getStatusCode();
-        if (statusCode.is4xxClientError()) return Optional.empty();
-        if (statusCode.is5xxServerError()) return Optional.empty();
-
-        RickAndMortyCharacterResponse response = responseEntity.getBody();
+    private Optional<RickAndMortyCharacter> getCharacterResponse(String uri) {
+        RickAndMortyCharacterResponse response = getResponse(uri, RickAndMortyCharacterResponse.class);
         if (response==null) return Optional.empty();
 
         return response.toCharacter();
+    }
+
+    public List<RickAndMortyCharacter> getCharacters() {
+        return getCharacterListResponse("");
+    }
+
+    public Optional<RickAndMortyCharacter> getCharacterById(String id) {
+        return getCharacterResponse("/" + id);
+    }
+
+    public List<RickAndMortyCharacter> getCharactersByStatus(String status) {
+        return getCharacterListResponse("?status=" + status);
+    }
+
+    public int getStatisticForSpecies(String request, String species) {
+        String newUri = "?status=" + request + "&species=" + species;
+        RickAndMortyCharacterListResponse response = getResponse(newUri, RickAndMortyCharacterListResponse.class);
+        if (response==null) return 0;
+        if (response.info()==null) return 0;
+        return response.info().count();
     }
 }

@@ -2,10 +2,8 @@ package com.example.rickandmortyapi;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.lang.Nullable;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,13 +15,20 @@ public class RickAndMortyCharacterController {
     private final RickAndMortyCharacterService rickAndMortyCharacterService;
 
     @GetMapping
-    public List<RickAndMortyCharacter> getAllCharacters() {
+    public List<RickAndMortyCharacter> getAllCharacters(@RequestParam @Nullable String status) {
+        if (status != null)
+            return rickAndMortyCharacterService.getCharactersByStatus(status);
         return rickAndMortyCharacterService.getCharacters();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RickAndMortyCharacter> getCharacter(@PathVariable String id) {
-        return ResponseEntity.of(rickAndMortyCharacterService.getCharacter(id));
+        return ResponseEntity.of(rickAndMortyCharacterService.getCharacterById(id));
+    }
+
+    @GetMapping("species-statistic")
+    int getStatisticForSpecies(@RequestParam String status, @RequestParam String species) {
+        return rickAndMortyCharacterService.getStatisticForSpecies(status, species);
     }
 
 
