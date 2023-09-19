@@ -1,5 +1,6 @@
 package com.example.rickandmortyapi;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,11 @@ import java.util.Optional;
 @Service
 public class RickAndMortyCharacterService {
 
-    private final WebClient webClient = WebClient.create("https://rickandmortyapi.com/api/character");
+    private final WebClient webClient;
+
+    public RickAndMortyCharacterService(@Value("${com.example.rickandmortyapi.url}") String url) {
+        this.webClient = WebClient.create(url);
+    }
 
     private <ResponseType> ResponseType getResponse(String uri, Class<ResponseType> clazz) {
         ResponseEntity<ResponseType> responseEntity = webClient
