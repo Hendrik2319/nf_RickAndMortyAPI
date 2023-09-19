@@ -38,7 +38,7 @@ public class RickAndMortyApiIntegrationTests {
     private MockMvc mockMvc;
 
     @Test
-    void getAllCharacters() throws Exception {
+    void whenGetAllCharacters_calledWithoutParameter() throws Exception {
         // Given
         mockWebServer.enqueue(
                 new MockResponse()
@@ -96,6 +96,135 @@ public class RickAndMortyApiIntegrationTests {
                             }
                         ]
                         """));
+    }
+
+    @Test
+    void whenGetAllCharacters_calledWithStatusParameter() throws Exception {
+        // Given
+        mockWebServer.enqueue(
+                new MockResponse()
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("""
+                                {
+                                    "info": {
+                                        "count": 1,
+                                        "pages": 1,
+                                        "next": null,
+                                        "prev": null
+                                    },
+                                    "results": [
+                                        {
+                                            "id": 204,
+                                            "name": "Lisa",
+                                            "status": "Dead",
+                                            "species": "Alien",
+                                            "type": "",
+                                            "gender": "Female",
+                                            "origin": {
+                                                "name": "unknown",
+                                                "url": ""
+                                            },
+                                            "location": {
+                                                "name": "Immortality Field Resort",
+                                                "url": "https://rickandmortyapi.com/api/location/7"
+                                            },
+                                            "image": "https://rickandmortyapi.com/api/character/avatar/204.jpeg",
+                                            "episode": [
+                                                "https://rickandmortyapi.com/api/episode/26"
+                                            ],
+                                            "url": "https://rickandmortyapi.com/api/character/204",
+                                            "created": "2017-12-30T12:59:58.460Z"
+                                        }
+                                    ]
+                                }
+                                """)
+        );
+
+        // When
+        mockMvc
+                .perform(MockMvcRequestBuilders
+                        .get("/api/characters?status=wwwwwwwwww")
+                )
+
+                // Then
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        [
+                            {
+                                "id": 204,
+                                "name": "Lisa",
+                                "species": "Alien"
+                            }
+                        ]
+                        """));
+    }
+
+    @Test
+    void whenGetCharacter_calledWithValidId() throws Exception {
+        // Given
+        mockWebServer.enqueue(
+                new MockResponse()
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("""
+                                {
+                                    "id": 204,
+                                    "name": "Lisa",
+                                    "status": "Dead",
+                                    "species": "Alien",
+                                    "type": "",
+                                    "gender": "Female",
+                                    "origin": {
+                                        "name": "unknown",
+                                        "url": ""
+                                    },
+                                    "location": {
+                                        "name": "Immortality Field Resort",
+                                        "url": "https://rickandmortyapi.com/api/location/7"
+                                    },
+                                    "image": "https://rickandmortyapi.com/api/character/avatar/204.jpeg",
+                                    "episode": [
+                                        "https://rickandmortyapi.com/api/episode/26"
+                                    ],
+                                    "url": "https://rickandmortyapi.com/api/character/204",
+                                    "created": "2017-12-30T12:59:58.460Z"
+                                }
+                                """)
+        );
+
+        // When
+        mockMvc
+                .perform(MockMvcRequestBuilders
+                        .get("/api/characters/abcdef")
+                )
+
+                // Then
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                            "id": 204,
+                            "name": "Lisa",
+                            "species": "Alien"
+                        }
+                        """));
+    }
+
+    @Test
+    void whenGetCharacter_calledWithInvalidId() throws Exception {
+        // Given
+        mockWebServer.enqueue(
+                new MockResponse()
+                        .setResponseCode(500)
+        );
+
+        // When
+        mockMvc
+                .perform(MockMvcRequestBuilders
+                        .get("/api/characters/abcdef")
+                )
+
+                // Then
+                .andExpect(status().is(404))
+        ;
     }
 
 }
