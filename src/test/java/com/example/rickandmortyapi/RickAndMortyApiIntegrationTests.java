@@ -2,8 +2,8 @@ package com.example.rickandmortyapi;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +28,32 @@ public class RickAndMortyApiIntegrationTests {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
     }
+
+    @AfterAll
+    static void teardown() throws IOException {
+        mockWebServer.shutdown();
+    }
+
+/*
+    @BeforeEach
+    void setup() throws IOException {
+        mockWebServer = new MockWebServer();
+        mockWebServer.start();
+    }
+
+    @AfterEach
+    void teardown() throws IOException {
+        mockWebServer.shutdown();
+    }
+*/
+
+/*
+    @AfterEach
+    void cleanupServer() throws InterruptedException {
+        while (mockWebServer.getRequestCount() > 0)
+            mockWebServer.takeRequest();
+    }
+*/
 
     @DynamicPropertySource
     static void setUrlDynamically(DynamicPropertyRegistry reg) {
@@ -157,6 +183,12 @@ public class RickAndMortyApiIntegrationTests {
                             }
                         ]
                         """));
+
+/*
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        Assertions.assertEquals("GET", recordedRequest.getMethod());
+        Assertions.assertEquals("/", recordedRequest.getPath());
+*/
     }
 
     @Test
@@ -206,6 +238,12 @@ public class RickAndMortyApiIntegrationTests {
                             "species": "Alien"
                         }
                         """));
+
+/*
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        Assertions.assertEquals("GET", recordedRequest.getMethod());
+        Assertions.assertEquals("/abcdef", recordedRequest.getPath());
+*/
     }
 
     @Test
@@ -225,6 +263,65 @@ public class RickAndMortyApiIntegrationTests {
                 // Then
                 .andExpect(status().is(404))
         ;
+
+/*
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        Assertions.assertEquals("GET", recordedRequest.getMethod());
+        Assertions.assertEquals("/abcdef", recordedRequest.getPath());
+*/
+    }
+
+    @Test
+    void whenGetStatisticForSpecies_called() throws Exception {
+        // Given
+        mockWebServer.enqueue(
+                new MockResponse()
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("""
+                                {
+                                    "info": {
+                                        "count": 1,
+                                        "pages": 1,
+                                        "next": null,
+                                        "prev": null
+                                    },
+                                    "results": [
+                                        {
+                                            "id": 204,
+                                            "name": "Lisa",
+                                            "status": "Dead",
+                                            "species": "Alien",
+                                            "type": "",
+                                            "gender": "Female",
+                                            "origin": {
+                                                "name": "unknown",
+                                                "url": ""
+                                            },
+                                            "location": {
+                                                "name": "Immortality Field Resort",
+                                                "url": "https://rickandmortyapi.com/api/location/7"
+                                            },
+                                            "image": "https://rickandmortyapi.com/api/character/avatar/204.jpeg",
+                                            "episode": [
+                                                "https://rickandmortyapi.com/api/episode/26"
+                                            ],
+                                            "url": "https://rickandmortyapi.com/api/character/204",
+                                            "created": "2017-12-30T12:59:58.460Z"
+                                        }
+                                    ]
+                                }
+                                """)
+        );
+
+        // When
+        mockMvc
+                .perform(MockMvcRequestBuilders
+                        .get("/api/characters/species-statistic?status=WWWWWW&species=XXXXXXX")
+                )
+
+                // Then
+                .andExpect(status().isOk())
+                .andExpect(content().string("1"));
     }
 
 }
